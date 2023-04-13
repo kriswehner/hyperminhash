@@ -171,7 +171,7 @@ func (sk *Sketch) Intersection(other *Sketch) uint64 {
 // PolyIntersection will get the Intersection across multiple Sketches
 func PolyIntersection(sketches []*Sketch) uint64 {
 
-	var fullCount *Sketch
+	fullCount := New()
 	for _, sk := range sketches {
 		fullCount.Merge(sk)
 	}
