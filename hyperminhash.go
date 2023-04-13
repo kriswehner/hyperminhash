@@ -3,6 +3,7 @@ package hyperminhash
 import (
 	"math"
 	bits "math/bits"
+	"strconv"
 
 	metro "github.com/dgryski/go-metro"
 )
@@ -165,4 +166,43 @@ func (sk *Sketch) expectedCollision(n, m float64) float64 {
 func (sk *Sketch) Intersection(other *Sketch) uint64 {
 	sim := sk.Similarity(other)
 	return uint64((sim*float64(sk.Merge(other).Cardinality()) + 0.5))
+}
+
+// PolyIntersection will get the Intersection across multiple Sketches
+func PolyIntersection(sketches []*Sketch) uint64 {
+
+	var fullCount *Sketch
+	for _, sk := range sketches {
+		fullCount.Merge(sk)
+	}
+
+	// workDone tracks if comparison has already been made. the lower index is in the map
+	workDone := make(map[string]bool)
+
+	sim := float64(1)
+
+	for i, sk := range sketches {
+		for i2, sk2 := range sketches {
+			if i == i2 {
+				continue // dont want to compare to self
+			}
+			if done, _ := workDone[uniqueKeyPair(i, i2)]; done { // dont want to compare two set twice either
+				continue
+			}
+			jaccard := sk.Similarity(sk2)
+			if jaccard < sim {
+				sim = jaccard
+			}
+			workDone[uniqueKeyPair(i, i2)] = true
+		}
+
+	}
+	return uint64((sim*float64(fullCount.Cardinality()) + 0.5))
+}
+
+func uniqueKeyPair(i int, i2 int) string {
+	if i < i2 {
+		return strconv.Itoa(i) + "-" + strconv.Itoa(i2)
+	}
+	return strconv.Itoa(i2) + "-" + strconv.Itoa(i)
 }

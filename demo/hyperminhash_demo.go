@@ -5,8 +5,8 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/crodwell/hyperminhash"
 	pcgr "github.com/dgryski/go-pcgr"
-	"github.com/axiomhq/hyperminhash"
 )
 
 func estimateError(got, exp uint64) float64 {
