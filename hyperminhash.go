@@ -1,6 +1,7 @@
 package hyperminhash
 
 import (
+	"fmt"
 	"math"
 	bits "math/bits"
 	"strconv"
@@ -114,7 +115,6 @@ func (sk *Sketch) Similarity(other *Sketch) float64 {
 	if C == 0 {
 		return 0
 	}
-
 	n := float64(sk.Cardinality())
 	m := float64(other.Cardinality())
 	ec := sk.approximateExpectedCollisions(n, m)
@@ -168,41 +168,110 @@ func (sk *Sketch) Intersection(other *Sketch) uint64 {
 	return uint64((sim*float64(sk.Merge(other).Cardinality()) + 0.5))
 }
 
-// PolyIntersection will get the Intersection across multiple Sketches
-func PolyIntersection(sketches []*Sketch) uint64 {
+// // PolyIntersection will get the Intersection across multiple Sketches
+// func PolyIntersection(sketches []*Sketch) uint64 {
+// 	if len(sketches) == 0 {
+// 		return 0
+// 	}
+// 	fullCount := New()
+// 	for _, sk := range sketches {
+// 		fullCount = fullCount.Merge(sk)
+// 	}
 
-	fullCount := New()
-	for _, sk := range sketches {
-		fullCount.Merge(sk)
-	}
+// 	// workDone tracks if comparison has already been made. the lower index the key of the map
+// 	workDone := make(map[string]bool)
 
-	// workDone tracks if comparison has already been made. the lower index is in the map
-	workDone := make(map[string]bool)
+// 	// sim := float64(1)
 
-	sim := float64(1)
+// 	var sumOfIntersections uint64
+// 	var sumOfCardinality uint64
+// 	for i, sk := range sketches {
+// 		sumOfCardinality += sk.Cardinality()
+// 		for i2, sk2 := range sketches {
+// 			if i == i2 {
+// 				continue // dont want to compare to self
+// 			}
+// 			if done, _ := workDone[uniqueKeyPair(i, i2)]; done { // dont want to compare a set pair twice either
+// 				continue
+// 			}
+// 			sumOfIntersections += sk.Intersection(sk2)
+// 			workDone[uniqueKeyPair(i, i2)] = true
+// 		}
 
-	for i, sk := range sketches {
-		for i2, sk2 := range sketches {
-			if i == i2 {
-				continue // dont want to compare to self
-			}
-			if done, _ := workDone[uniqueKeyPair(i, i2)]; done { // dont want to compare two set twice either
-				continue
-			}
-			jaccard := sk.Similarity(sk2)
-			if jaccard < sim {
-				sim = jaccard
-			}
-			workDone[uniqueKeyPair(i, i2)] = true
-		}
-
-	}
-	return uint64((sim*float64(fullCount.Cardinality()) + 0.5))
-}
+// 	}
+// 	// return uint64((sim*float64(fullCount.Cardinality()) + 0.5))
+// 	return fullCount.Cardinality() - sumOfCardinality + sumOfIntersections
+// }
 
 func uniqueKeyPair(i int, i2 int) string {
 	if i < i2 {
 		return strconv.Itoa(i) + "-" + strconv.Itoa(i2)
 	}
 	return strconv.Itoa(i2) + "-" + strconv.Itoa(i)
+}
+
+// PolySimilarity return a Jaccard Index similarity estimation
+func PolySimilarity(sketches []*Sketch) float64 {
+	if len(sketches) <= 1 {
+		return float64(len(sketches))
+	}
+
+	// workDone tracks if comparison has already been made. the lower index the key of the map
+	workDone := make(map[string]bool)
+
+	var N float64
+	C := math.MaxFloat64
+	for i, sk := range sketches {
+		for i2, sk2 := range sketches {
+			if i == i2 {
+				continue // dont want to compare to self
+			}
+			if done, _ := workDone[uniqueKeyPair(i, i2)]; done { // dont want to compare a set pair twice either
+				continue
+			}
+			var c, n float64
+			for m := range sk.reg {
+				if sk.reg[m] != 0 && sk.reg[m] == sk2.reg[m] {
+					c++
+				}
+				if sk.reg[m] != 0 || sk2.reg[m] != 0 {
+					n++
+				}
+			}
+			ec := sk.approximateExpectedCollisions(float64(sk.Cardinality()), float64(sk2.Cardinality()))
+			//FIXME: must be a better way to predetect this
+			if c < ec {
+				return 0
+			}
+			// This subtraction makes minimal difference to the result, but continuing the prior pattern.
+			c -= ec
+			// fmt.Printf("compare %d:%d; c = %v, ec =  %v, N = %v\n", i, i2, c, ec, N)
+			if c < C {
+				C = c
+			}
+			if n > N {
+				N = n
+			}
+			workDone[uniqueKeyPair(i, i2)] = true
+		}
+	}
+
+	if C == 0 {
+		return 0
+	}
+
+	// fmt.Printf("%v(C)/ %v(N) = %v\n", C, N, (C / N))
+	return C / N
+}
+
+// PolyIntersection will get the Intersection across multiple Sketches
+func PolyIntersection(sketches []*Sketch) uint64 {
+	sim := PolySimilarity(sketches)
+
+	fullCount := New()
+	for _, sk := range sketches {
+		fullCount = fullCount.Merge(sk)
+	}
+	fmt.Printf("Union Cardinality: %v\n", fullCount.Cardinality())
+	return uint64((sim*float64(fullCount.Cardinality()) + 0.5))
 }
