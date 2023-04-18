@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"math/rand"
 	"time"
 
 	"github.com/crodwell/hyperminhash"
@@ -19,7 +18,13 @@ type Sketch struct {
 	Actual int
 }
 
-const maxRange = 5
+// Add is a test method
+func (sk *Sketch) Add(b []byte) {
+	sk.Actual++
+	sk.Hash.Add(b)
+}
+
+const maxRange = 15
 
 var sketches []Sketch
 
@@ -29,83 +34,119 @@ func main() {
 		sketches[int(i)].Hash = hyperminhash.New()
 	}
 
-	// for i := 0; i < 10000; i++ {
-	// 	newUser := user{UUID: uuid.NewV4().Bytes(), Segments: randomSegmentMembership()}
-	// 	for _, segment := range newUser.Segments {
-	// 		sketches[segment].Hash.Add(newUser.UUID)
-	// 	}
-	// }
-
-	for i := 0; i < 10000000; i++ {
-		user := uuid.NewV4().Bytes()
-		sketches[1].Hash.Add(user)
-		sketches[2].Hash.Add(user)
-	}
-
-	for i := 0; i < 5000000; i++ {
-		user := uuid.NewV4().Bytes()
-		sketches[1].Hash.Add(user)
-
-	}
-
 	for i := 0; i < 1000000; i++ {
 		user := uuid.NewV4().Bytes()
-		sketches[1].Hash.Add(user)
-		sketches[3].Hash.Add(user)
+		sketches[1].Add(user)
+		sketches[2].Add(user)
 	}
 
-	for i := 0; i < 1000000; i++ {
+	for i := 0; i < 500000; i++ {
 		user := uuid.NewV4().Bytes()
-		sketches[1].Hash.Add(user)
-		sketches[2].Hash.Add(user)
-		sketches[3].Hash.Add(user)
+		sketches[1].Add(user)
+
 	}
 
-	for i := 0; i < 300000; i++ {
+	for i := 0; i < 100000; i++ {
 		user := uuid.NewV4().Bytes()
-		sketches[1].Hash.Add(user)
-		sketches[2].Hash.Add(user)
-		sketches[3].Hash.Add(user)
-		sketches[4].Hash.Add(user)
+		sketches[1].Add(user)
+		sketches[3].Add(user)
 	}
 
-	fmt.Printf("Sketch 1 Cardinality: %d\n", sketches[1].Hash.Cardinality())
-	fmt.Printf("Sketch 2 Cardinality: %d\n", sketches[2].Hash.Cardinality())
-	fmt.Printf("Sketch 3 Cardinality: %d\n", sketches[3].Hash.Cardinality())
-	fmt.Printf("Sketch 4 Cardinality: %d\n", sketches[4].Hash.Cardinality())
-	fmt.Printf("Sketch 5 Cardinality: %d\n", sketches[5].Hash.Cardinality())
+	for i := 0; i < 100000; i++ {
+		user := uuid.NewV4().Bytes()
+		sketches[1].Add(user)
+		sketches[2].Add(user)
+		sketches[3].Add(user)
+	}
 
+	for i := 0; i < 30000; i++ {
+		user := uuid.NewV4().Bytes()
+		sketches[1].Add(user)
+		sketches[2].Add(user)
+		sketches[3].Add(user)
+		sketches[4].Add(user)
+	}
+
+	for i := 0; i < 10000; i++ {
+		user := uuid.NewV4().Bytes()
+		sketches[1].Add(user)
+		sketches[2].Add(user)
+		sketches[3].Add(user)
+		sketches[4].Add(user)
+		sketches[5].Add(user)
+	}
+
+	for i := 0; i < 1000; i++ {
+		user := uuid.NewV4().Bytes()
+		sketches[1].Add(user)
+		sketches[2].Add(user)
+		sketches[3].Add(user)
+		sketches[4].Add(user)
+		sketches[5].Add(user)
+		sketches[6].Add(user)
+		sketches[7].Add(user)
+		sketches[8].Add(user)
+		sketches[9].Add(user)
+		sketches[10].Add(user)
+		sketches[11].Add(user)
+		sketches[12].Add(user)
+		sketches[13].Add(user)
+		sketches[14].Add(user)
+		sketches[15].Add(user)
+
+	}
 	start := time.Now()
-	fmt.Printf("Intersection of Sketches 1 - 4: %v\n", hyperminhash.PolyIntersection([]*hyperminhash.Sketch{sketches[1].Hash, sketches[2].Hash, sketches[3].Hash, sketches[4].Hash}))
-	fmt.Printf("Intersection took %s\n", time.Since(start))
+	card := sketches[1].Hash.Cardinality()
+	fmt.Printf("Set 1 HLL Cardinality: %d, Actual: %d,  Accuracy: %.2f%%, Execution Time: %s\n", card, sketches[1].Actual, accuracy(card, sketches[1].Actual), time.Since(start))
 	start = time.Now()
-	fmt.Printf("Intersection of Sketches 2 - 4 : %d\n", hyperminhash.PolyIntersection([]*hyperminhash.Sketch{sketches[2].Hash, sketches[3].Hash, sketches[4].Hash}))
-	fmt.Printf("Intersection took %s\n", time.Since(start))
+	card = sketches[2].Hash.Cardinality()
+	fmt.Printf("Set 2 HLL Cardinality: %d, Actual: %d,  Accuracy: %.2f%%, Execution Time: %s\n", card, sketches[2].Actual, accuracy(card, sketches[2].Actual), time.Since(start))
 	start = time.Now()
-	fmt.Printf("Intersection of Sketches 1 - 3 : %d\n", hyperminhash.PolyIntersection([]*hyperminhash.Sketch{sketches[2].Hash, sketches[3].Hash, sketches[1].Hash}))
-	fmt.Printf("Intersection took %s\n", time.Since(start))
-	// fmt.Printf("Intersection of Sketch 1 & 3: %d\n", sketches[1].Hash.Intersection(sketches[3].Hash))
+	card = sketches[3].Hash.Cardinality()
+	fmt.Printf("Set 3 HLL Cardinality: %d, Actual: %d,  Accuracy: %.2f%%, Execution Time: %s\n", card, sketches[3].Actual, accuracy(card, sketches[3].Actual), time.Since(start))
+	start = time.Now()
+	card = sketches[4].Hash.Cardinality()
+	fmt.Printf("Set 4 HLL Cardinality: %d, Actual: %d,  Accuracy: %.2f%%, Execution Time: %s\n", card, sketches[4].Actual, accuracy(card, sketches[4].Actual), time.Since(start))
+	start = time.Now()
+	card = sketches[5].Hash.Cardinality()
+	fmt.Printf("Set 5 HLL Cardinality: %d, Actual: %d,  Accuracy: %.2f%%, Execution Time: %s\n", card, sketches[5].Actual, accuracy(card, sketches[5].Actual), time.Since(start))
+	start = time.Now()
+	card = sketches[6].Hash.Cardinality()
+	fmt.Printf("Set 6-15 HLL Cardinality: %d, Actual: %d,  Accuracy: %.2f%%, Execution Time: %s\n", card, sketches[6].Actual, accuracy(card, sketches[6].Actual), time.Since(start))
 
-	// fmt.Printf("Union of All 3: %d\n", sketches[1].Hash.Merge(sketches[2].Hash.Merge(sketches[3].Hash)))
+	start = time.Now()
+	sketch1to2ActualIntersection := 140000
+	sketch1to2Intersection := hyperminhash.PolyIntersection([]*hyperminhash.Sketch{sketches[2].Hash, sketches[3].Hash})
+	fmt.Printf("S2 ∩ S3 : %d, Actual: %d,  Accuracy: %.2f%%, Execution Time: %s\n", sketch1to2Intersection, sketch1to2ActualIntersection, accuracy(sketch1to2Intersection, sketch1to2ActualIntersection), time.Since(start))
 
-	// fmt.Printf("Intersection of Sketch 1, 2 & 3: %d\n", hyperminhash.PolyIntersection([]*hyperminhash.Sketch{sketches[1].Hash, sketches[2].Hash, sketches[3].Hash}))
-	// fmt.Printf("Intersection of Sketch 1, 2, 3 & 4: %d\n", hyperminhash.PolyIntersection([]*hyperminhash.Sketch{sketches[1].Hash, sketches[2].Hash, sketches[3].Hash, sketches[4].Hash}))
+	start = time.Now()
+	sketch1to3ActualIntersection := 140000
+	sketch1to3Intersection := hyperminhash.PolyIntersection([]*hyperminhash.Sketch{sketches[1].Hash, sketches[2].Hash, sketches[3].Hash})
+	fmt.Printf("S1 ∩ S2 ∩ S3 : %d, Actual: %d,  Accuracy: %.2f%%, Execution Time: %s\n", sketch1to3Intersection, sketch1to3ActualIntersection, accuracy(sketch1to3Intersection, sketch1to3ActualIntersection), time.Since(start))
 
-	// fmt.Printf("Jaccard Index of Sketch 1, 2 & 3: %d\n", sketches[1].Hash.Intersection(sketches[2].Hash.Intersection(sketches[3].Hash))
+	start = time.Now()
+	sketch2to4ActualIntersection := 40000
+	sketch2to4Intersection := hyperminhash.PolyIntersection([]*hyperminhash.Sketch{sketches[2].Hash, sketches[3].Hash, sketches[4].Hash})
+	fmt.Printf("S2 ∩ S3 ∩ S4 : %d, Actual: %d,  Accuracy: %.2f%%, Execution Time: %s\n", sketch2to4Intersection, sketch2to4ActualIntersection, accuracy(sketch2to4Intersection, sketch2to4ActualIntersection), time.Since(start))
 
-	// fmt.Printf("Sketch 1 Size: %d\n", unsafe.Sizeof(*sketches[1].Hash))
-	// fmt.Printf("Sketch 2 Size: %d\n", unsafe.Sizeof(*sketches[2].Hash))
-	// fmt.Printf("Sketch 3 Size: %d\n", unsafe.Sizeof(*sketches[3].Hash))
-	// fmt.Printf("Sketch 4 Size: %d\n", unsafe.Sizeof(*sketches[4].Hash))
+	start = time.Now()
+	sketch1to4ActualIntersection := 40000
+	sketch1to4Intersection := hyperminhash.PolyIntersection([]*hyperminhash.Sketch{sketches[1].Hash, sketches[2].Hash, sketches[3].Hash, sketches[4].Hash})
+	fmt.Printf("S1 ∩ S2 ∩ S3 ∩ S4 : %d, Actual: %d,  Accuracy: %.2f%%, Execution Time: %s\n", sketch1to4Intersection, sketch1to4ActualIntersection, accuracy(sketch1to4Intersection, sketch1to4ActualIntersection), time.Since(start))
+
+	start = time.Now()
+	sketch1to5ActualIntersection := 11000
+	sketch1to5Intersection := hyperminhash.PolyIntersection([]*hyperminhash.Sketch{sketches[1].Hash, sketches[2].Hash, sketches[3].Hash, sketches[4].Hash, sketches[5].Hash})
+	fmt.Printf("S1 ∩ S2 ∩ S3 ∩ S4 ∩ S5 : %d, Actual: %d,  Accuracy: %.2f%%, Execution Time: %s\n", sketch1to5Intersection, sketch1to5ActualIntersection, accuracy(sketch1to5Intersection, sketch1to5ActualIntersection), time.Since(start))
+
+	start = time.Now()
+	sketch1to15ActualIntersection := 1000
+	sketch1to15Intersection := hyperminhash.PolyIntersection([]*hyperminhash.Sketch{sketches[1].Hash, sketches[2].Hash, sketches[3].Hash, sketches[4].Hash, sketches[5].Hash,
+		sketches[6].Hash, sketches[7].Hash, sketches[8].Hash, sketches[9].Hash, sketches[10].Hash, sketches[11].Hash, sketches[12].Hash, sketches[13].Hash, sketches[14].Hash, sketches[15].Hash})
+	fmt.Printf("S1 ∩ S2 ∩ S3 ∩ S4 ∩ S5 ∩ S6 ∩ S7 ∩ S8 ∩ S4 ∩ S9 ∩ S10 ∩ S11 ∩ S12 ∩ S13 ∩ S14 ∩ S15: %d, Actual: %d,  Accuracy: %.2f%%, Execution Time: %s\n", sketch1to15Intersection, sketch1to15ActualIntersection, accuracy(sketch1to15Intersection, sketch1to15ActualIntersection), time.Since(start))
 
 }
 
-func randomSegmentMembership() (segments []int) {
-	for i := 1; i <= maxRange; i++ {
-		rand.Seed(time.Now().UnixNano())
-		if rand.Intn(2) == 1 {
-			segments = append(segments, i)
-		}
-	}
-	return
+func accuracy(a uint64, b int) (acc float64) {
+	return ((float64(a) / float64(b)) - 1) * 100
 }

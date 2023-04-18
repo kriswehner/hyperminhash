@@ -13,7 +13,9 @@ require (
 )
 
 require (
+	github.com/davecgh/go-spew v1.1.1
 	github.com/enki/fastprng v0.0.0-20190912035746-b46f877a1a50 // indirect
 	github.com/lazybeaver/xorshift v0.0.0-20170702203709-ce511d4823dd // indirect
 	github.com/satori/go.uuid v1.2.0
+	golang.org/x/exp v0.0.0-20230321023759-10a507213a29
 )
