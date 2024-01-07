@@ -1,4 +1,4 @@
-module github.com/crodwell/hyperminhash
+module github.com/kriswehner/hyperminhash
 
 go 1.20
 
