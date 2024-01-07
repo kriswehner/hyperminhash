@@ -64,6 +64,12 @@ func New() *Sketch {
 	return new(Sketch)
 }
 
+func NewFromRegisters(s [m]register) *Sketch {
+	sk := New()
+	sk.reg = s
+	return sk
+}
+
 // AddHash takes in a "hashed" value (bring your own hashing)
 func (sk *Sketch) AddHash(x, y uint64) {
 	k := x >> uint(max)
